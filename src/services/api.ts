@@ -50,3 +50,8 @@ export const proService = {
   checkout: () => api.post('/api/pro/checkout'),
   getSuggestions: (matchId: string) => api.get(`/api/pro/sugerencias/${matchId}`),
 };
+
+export const mercadoPagoService = {
+  createPayment: (data: any) => api.post('/api/mercadopago/create-payment', data),
+  getPaymentStatus: (paymentId: string) => api.get(`/api/mercadopago/payment-status/${paymentId}`),
+};

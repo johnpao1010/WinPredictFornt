@@ -15,6 +15,7 @@ interface AuthContextType {
   logout: () => void;
   isLoading: boolean;
   setDemoMode: (isPro: boolean) => void;
+  updateUser: (updates: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -63,8 +64,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login('demo-token', demoUser);
   };
 
+  const updateUser = (updates: Partial<User>) => {
+    if (user) {
+      const updatedUser = { ...user, ...updates };
+      setUser(updatedUser);
+      localStorage.setItem('is_pro', String(updatedUser.is_pro));
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoading, setDemoMode }}>
+    <AuthContext.Provider value={{ user, token, login, logout, isLoading, setDemoMode, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

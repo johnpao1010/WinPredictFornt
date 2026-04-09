@@ -4,11 +4,21 @@ import { Star, ChevronRight, Lock, Crown } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { cn } from '../lib/utils';
+import { MercadoPagoPayment } from '../components/MercadoPagoPayment';
 
 export const Home = () => {
-  const { user, setDemoMode } = useAuth();
+  const { user, setDemoMode, updateUser } = useAuth();
   const isPro = user?.is_pro || false;
   const [activeTab, setActiveTab] = useState('inicio');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+
+  const handlePaymentSuccess = () => {
+    // Actualizar el estado del usuario a PRO
+    if (user) {
+      updateUser({ is_pro: true });
+      alert('¡Pago exitoso! Bienvenido a WinPredict PRO');
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-full bg-gray-50">
@@ -175,7 +185,7 @@ export const Home = () => {
                   <div className="text-2xl font-bold text-amber-400">$2 USD</div>
                   <div className="text-[10px] text-violet-300 uppercase tracking-wider">pago único - toda la polla</div>
                 </div>
-                <Button variant="pro" onClick={() => setDemoMode(true)}>
+                <Button variant="pro" onClick={() => setShowPaymentModal(true)}>
                   Activar PRO
                 </Button>
               </div>
@@ -302,6 +312,15 @@ export const Home = () => {
         </div>
 
       </div>
+
+      {/* Modal de Pago Mercado Pago */}
+      <MercadoPagoPayment
+        isOpen={showPaymentModal}
+        onClose={() => setShowPaymentModal(false)}
+        onSuccess={handlePaymentSuccess}
+        amount={2}
+        description="WinPredict PRO - Acceso vitalicio"
+      />
     </div>
   );
 };
