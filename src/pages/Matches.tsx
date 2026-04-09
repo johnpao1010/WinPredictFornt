@@ -1,15 +1,29 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent } from '../components/ui/card';
 import { CalendarDays, ChevronRight } from 'lucide-react';
+import { matchesService } from '../services/api';
 
 export const Matches = () => {
   const navigate = useNavigate();
-  const matches = [
-    { id: '1', local: 'Colombia', visitante: 'Brasil', date: 'Hoy 15:00', group: 'Grupo A', status: 'pending' },
-    { id: '2', local: 'Argentina', visitante: 'Francia', date: 'Mañana 14:00', group: 'Grupo B', status: 'pending' },
-    { id: '3', local: 'España', visitante: 'Alemania', date: '10 Abr 16:00', group: 'Grupo C', status: 'pending' },
-  ];
+  const [matches, setMatches] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMatches = async () => {
+      try {
+        const response = await matchesService.list();
+        console.log('API Response:', response.data);
+        setMatches(response.data);
+      } catch (error) {
+        console.error('Error fetching matches:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMatches();
+  }, []);
 
   return (
     <div className="flex flex-col min-h-full bg-gray-50 pb-20">
@@ -20,7 +34,21 @@ export const Matches = () => {
         <p className="text-violet-200 text-sm mt-1">Programa y pronostica</p>
       </div>
       <div className="px-6 py-6 space-y-4">
-        {matches.map(match => (
+        {loading && (
+          <div className="text-center py-8">
+            <div className="text-gray-500">Cargando partidos...</div>
+          </div>
+        )}
+        
+        {!loading && matches.length === 0 && (
+          <div className="text-center py-8">
+            <div className="text-gray-500">No hay partidos disponibles</div>
+          </div>
+        )}
+        
+        {!loading && matches.length > 0 && matches.map(match => {
+          console.log('Match structure:', match);
+          return (
           <Card key={match.id} className="border-gray-100 shadow-sm cursor-pointer hover:border-violet-200 transition-colors" onClick={() => navigate(`/partidos/${match.id}`)}>
             <CardContent className="p-5">
               <div className="flex justify-between items-center mb-4">
@@ -28,13 +56,17 @@ export const Matches = () => {
               </div>
               <div className="flex justify-between items-center px-2">
                 <div className="text-center w-1/3">
-                  <div className="w-10 h-10 bg-gray-100 rounded-full mb-2 mx-auto border border-gray-200 flex items-center justify-center text-xs font-bold text-gray-400">{match.local.substring(0,3).toUpperCase()}</div>
-                  <span className="text-sm font-medium text-gray-700">{match.local}</span>
+                  <div className="w-10 h-10 mb-2 mx-auto flex items-center justify-center text-2xl">
+                    {match.bandera_local || '🏳️'}
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">{match.equipo_local || 'Equipo local'}</span>
                 </div>
                 <span className="text-xs font-bold text-gray-300 w-1/3 text-center">VS</span>
                 <div className="text-center w-1/3">
-                  <div className="w-10 h-10 bg-gray-100 rounded-full mb-2 mx-auto border border-gray-200 flex items-center justify-center text-xs font-bold text-gray-400">{match.visitante.substring(0,3).toUpperCase()}</div>
-                  <span className="text-sm font-medium text-gray-700">{match.visitante}</span>
+                  <div className="w-10 h-10 mb-2 mx-auto flex items-center justify-center text-2xl">
+                    {match.bandera_visitante || '🏳️'}
+                  </div>
+                  <span className="text-sm font-medium text-gray-700">{match.equipo_visitante || 'Equipo visitante'}</span>
                 </div>
               </div>
               <div className="mt-4 pt-4 border-t border-gray-50 flex justify-between items-center">
@@ -43,7 +75,8 @@ export const Matches = () => {
               </div>
             </CardContent>
           </Card>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
