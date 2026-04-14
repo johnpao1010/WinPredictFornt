@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Card, CardContent } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { ArrowLeft, Star } from 'lucide-react';
+import { matchesService, predictionsService } from '../services/api';
 
 export const MatchDetails = () => {
   const { id } = useParams();
@@ -14,10 +15,47 @@ export const MatchDetails = () => {
 
   const [golesLocal, setGolesLocal] = useState('');
   const [golesVisitante, setGolesVisitante] = useState('');
+  const [match, setMatch] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleSave = () => {
-    alert('Pronóstico guardado (Demo)');
-    navigate('/partidos');
+  useEffect(() => {
+    const fetchMatch = async () => {
+      try {
+        const response = await matchesService.get(id!);
+        setMatch(response.data);
+      } catch (error) {
+        console.error('Error fetching match:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchMatch();
+    }
+  }, [id]);
+
+  const handleSave = async () => {
+    if (!golesLocal || !golesVisitante) {
+      alert('Por favor ingresa ambos marcadores');
+      return;
+    }
+
+    try {
+      const predictionData = {
+        partido_id: match.id,
+        grupo_id: match.fase, // Usando fase como grupo_id, ajustar según API
+        goles_local: parseInt(golesLocal),
+        goles_visitante: parseInt(golesVisitante)
+      };
+
+      await predictionsService.register(predictionData);
+      alert('Pronóstico guardado exitosamente');
+      navigate('/partidos');
+    } catch (error) {
+      console.error('Error saving prediction:', error);
+      alert('Error al guardar el pronóstico. Intenta nuevamente.');
+    }
   };
 
   return (
@@ -27,21 +65,33 @@ export const MatchDetails = () => {
           <ArrowLeft className="w-5 h-5 mr-1" /> Volver
         </button>
         <h1 className="text-2xl font-bold">Detalle del Partido</h1>
-        <p className="text-violet-200 text-sm mt-1">Grupo A - Hoy 15:00</p>
+        <p className="text-violet-200 text-sm mt-1">
+          {loading ? 'Cargando...' : `${match?.fase || 'Partido'} - ${new Date(match?.fecha_hora).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}`}
+        </p>
       </div>
 
       <div className="px-6 py-6 space-y-6">
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando detalles del partido...</p>
+          </div>
+        ) : (
         <Card className="border-gray-100 shadow-sm">
           <CardContent className="p-6">
             <div className="flex justify-between items-center mb-6">
               <div className="text-center w-1/3">
-                <div className="w-16 h-16 bg-gray-100 rounded-full mb-2 mx-auto border border-gray-200 flex items-center justify-center font-bold text-gray-400">COL</div>
-                <span className="text-sm font-bold text-gray-700">Colombia</span>
+                <div className="w-16 h-16 mb-2 mx-auto flex items-center justify-center text-2xl">
+                  {match?.bandera_local || '🏳️'}
+                </div>
+                <span className="text-sm font-bold text-gray-700">{match?.equipo_local || 'Equipo local'}</span>
               </div>
               <span className="text-xl font-black text-gray-300 w-1/3 text-center">VS</span>
               <div className="text-center w-1/3">
-                <div className="w-16 h-16 bg-gray-100 rounded-full mb-2 mx-auto border border-gray-200 flex items-center justify-center font-bold text-gray-400">BRA</div>
-                <span className="text-sm font-bold text-gray-700">Brasil</span>
+                <div className="w-16 h-16 mb-2 mx-auto flex items-center justify-center text-2xl">
+                  {match?.bandera_visitante || '🏳️'}
+                </div>
+                <span className="text-sm font-bold text-gray-700">{match?.equipo_visitante || 'Equipo visitante'}</span>
               </div>
             </div>
 
@@ -58,6 +108,7 @@ export const MatchDetails = () => {
             </div>
           </CardContent>
         </Card>
+        )}
 
         {isPro ? (
           <Card className="border-amber-200 bg-amber-50/50 shadow-sm">
@@ -68,7 +119,7 @@ export const MatchDetails = () => {
               </div>
               <p className="text-sm text-gray-600 mb-4">Basado en el rendimiento histórico y estadísticas recientes, el marcador más probable es:</p>
               <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-amber-100">
-                <span className="font-bold text-violet-950">Colombia 2 - 1 Brasil</span>
+                <span className="font-bold text-violet-950">{match?.equipo_local} 2 - 1 {match?.equipo_visitante}</span>
                 <span className="text-xs font-bold text-amber-600 bg-amber-100 px-2 py-1 rounded">68% prob.</span>
               </div>
               <Button variant="outline" className="w-full mt-3 border-amber-300 text-amber-700 hover:bg-amber-100" onClick={() => { setGolesLocal('2'); setGolesVisitante('1'); }}>
