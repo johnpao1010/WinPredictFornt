@@ -45,7 +45,13 @@ export const MercadoPagoPayment: React.FC<MercadoPagoPaymentProps> = ({
       };
 
       const response = await mercadoPagoService.createPayment(paymentData);
-      const { init_point, sandbox_init_point, id } = response.data;
+      console.log('Respuesta de Mercado Pago:', response.data);
+      
+      // Manejar diferentes estructuras de respuesta
+      const responseData = response.data;
+      const id = responseData.id || responseData.payment_id;
+      const init_point = responseData.init_point || responseData.sandbox_init_point || responseData.init_point;
+      const sandbox_init_point = responseData.sandbox_init_point || responseData.init_point;
       
       setPaymentId(id);
       setPaymentUrl(sandbox_init_point || init_point);
