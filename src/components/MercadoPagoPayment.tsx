@@ -42,11 +42,11 @@ export const MercadoPagoPayment: React.FC<MercadoPagoPaymentProps> = ({
       const data = await response.json();
       console.log('Respuesta de Mercado Pago:', data);
       
-      // Extraer checkout_url según la sugerencia del backend
-      const { checkout_url, id } = data;
+      // Extraer checkout_url y preference_id según la respuesta del backend
+      const { checkout_url, preference_id } = data;
       
       console.log('Checkout URL:', checkout_url);
-      console.log('Payment ID:', id);
+      console.log('Preference ID:', preference_id);
       
       setPaymentUrl(checkout_url);
 
