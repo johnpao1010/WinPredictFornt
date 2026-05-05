@@ -160,7 +160,7 @@ export const Home = () => {
             <div className="absolute top-0 right-0 w-32 h-32 bg-violet-800 rounded-full blur-3xl opacity-50 -mr-10 -mt-10"></div>
             <CardContent className="p-6 relative z-10">
               <div className="inline-block bg-amber-400 text-violet-950 text-[10px] font-bold px-2 py-1 rounded mb-3 uppercase tracking-wider">
-                PRO - $2 USD
+                PRO - $3.5 USD
               </div>
               <h3 className="text-xl font-bold mb-2 leading-tight">Gana con inteligencia artificial</h3>
               <p className="text-violet-200 text-sm mb-4 leading-relaxed">
@@ -182,7 +182,7 @@ export const Home = () => {
               </ul>
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-2xl font-bold text-amber-400">$2 USD</div>
+                  <div className="text-2xl font-bold text-amber-400">$3.5 USD</div>
                   <div className="text-[10px] text-violet-300 uppercase tracking-wider">pago único - toda la polla</div>
                 </div>
                 <Button variant="pro" onClick={() => setShowPaymentModal(true)}>

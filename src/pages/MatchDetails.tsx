@@ -136,7 +136,7 @@ export const MatchDetails = () => {
               <div>
                 <h3 className="font-bold mb-1">¿No sabes qué pronosticar?</h3>
                 <p className="text-xs text-violet-200 mb-3">Activa PRO y recibe sugerencias basadas en Inteligencia Artificial para este partido.</p>
-                <Button variant="pro" size="sm" onClick={() => setDemoMode(true)}>Activar PRO por $2</Button>
+                <Button variant="pro" size="sm" onClick={() => setDemoMode(true)}>Activar PRO por 3.5</Button>
               </div>
             </CardContent>
           </Card>
