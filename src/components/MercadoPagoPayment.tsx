@@ -31,7 +31,7 @@ export const MercadoPagoPayment: React.FC<MercadoPagoPaymentProps> = ({
     setLoading(true);
     try {
       const userToken = localStorage.getItem('token');
-      const response = await fetch('/api/pro/checkout', {
+      const response = await fetch('https://winpredict-backend.onrender.com/api/pro/checkout', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${userToken}`,
@@ -45,6 +45,11 @@ export const MercadoPagoPayment: React.FC<MercadoPagoPaymentProps> = ({
       // Verificar si la respuesta es JSON válido
       const responseText = await response.text();
       console.log('Response raw:', responseText);
+      
+      // Validar que la respuesta no esté vacía
+      if (!responseText.trim()) {
+        throw new Error('El servidor devolvió una respuesta vacía. El endpoint /api/pro/checkout puede tener un problema.');
+      }
       
       let data;
       try {
