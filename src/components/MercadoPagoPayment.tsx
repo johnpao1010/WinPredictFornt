@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, CreditCard, Smartphone, QrCode } from 'lucide-react';
 import { Card, CardContent } from './ui/card';
-import { mercadoPagoService } from '../services/api';
 
 interface MercadoPagoPaymentProps {
   isOpen: boolean;
@@ -20,8 +19,6 @@ export const MercadoPagoPayment: React.FC<MercadoPagoPaymentProps> = ({
 }) => {
   const [loading, setLoading] = useState(false);
   const [paymentUrl, setPaymentUrl] = useState<string>('');
-  const [qrCode, setQrCode] = useState<string>('');
-  const [paymentId, setPaymentId] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'pix' | 'ticket'>('card');
 
   useEffect(() => {
@@ -33,33 +30,26 @@ export const MercadoPagoPayment: React.FC<MercadoPagoPaymentProps> = ({
   const createPayment = async () => {
     setLoading(true);
     try {
-      const paymentData = {
-        title: description,
-        quantity: 1,
-        unit_price: amount,
-        currency: 'USD',
-        payment_methods: {
-          excluded_payment_types: [],
-          installments: 1
+      const userToken = localStorage.getItem('token');
+      const response = await fetch('/api/pro/checkout', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${userToken}`,
+          'Content-Type': 'application/json'
         }
-      };
-
-      const response = await mercadoPagoService.createPayment(paymentData);
-      console.log('Respuesta de Mercado Pago:', response.data);
+      });
       
-      // Manejar diferentes estructuras de respuesta
-      const responseData = response.data;
-      const id = responseData.id || responseData.payment_id;
-      const init_point = responseData.init_point || responseData.sandbox_init_point || responseData.init_point;
-      const sandbox_init_point = responseData.sandbox_init_point || responseData.init_point;
+      const data = await response.json();
+      console.log('Respuesta de Mercado Pago:', data);
       
-      setPaymentId(id);
-      setPaymentUrl(sandbox_init_point || init_point);
+      // Extraer checkout_url según la sugerencia del backend
+      const { checkout_url, id } = data;
+      
+      console.log('Checkout URL:', checkout_url);
+      console.log('Payment ID:', id);
+      
+      setPaymentUrl(checkout_url);
 
-      // Para PIX (Brasil) o QR
-      if (response.data.point_of_interaction?.transaction_data?.qr_code) {
-        setQrCode(response.data.point_of_interaction.transaction_data.qr_code);
-      }
     } catch (error) {
       console.error('Error creating payment:', error);
     } finally {
@@ -69,39 +59,12 @@ export const MercadoPagoPayment: React.FC<MercadoPagoPaymentProps> = ({
 
   const handlePaymentRedirect = () => {
     if (paymentUrl) {
-      window.open(paymentUrl, '_blank');
-      // Iniciar polling para verificar el estado del pago
-      checkPaymentStatus();
+      // Redirigir a Mercado Pago como sugiere el backend
+      window.location.href = paymentUrl;
     }
   };
 
-  const checkPaymentStatus = async () => {
-    if (!paymentId) return;
-
-    const interval = setInterval(async () => {
-      try {
-        const response = await mercadoPagoService.getPaymentStatus(paymentId);
-        const status = response.data.status;
-
-        if (status === 'approved') {
-          clearInterval(interval);
-          onSuccess();
-          onClose();
-        } else if (status === 'rejected' || status === 'cancelled') {
-          clearInterval(interval);
-          alert('El pago fue rechazado. Por favor intenta nuevamente.');
-        }
-      } catch (error) {
-        console.error('Error checking payment status:', error);
-      }
-    }, 3000); // Verificar cada 3 segundos
-
-    // Limpiar el intervalo después de 5 minutos
-    setTimeout(() => {
-      clearInterval(interval);
-    }, 300000);
-  };
-
+  
   if (!isOpen) return null;
 
   return (
@@ -180,27 +143,16 @@ export const MercadoPagoPayment: React.FC<MercadoPagoPaymentProps> = ({
                 </button>
               </div>
 
-              {/* QR Code para PIX */}
-              {paymentMethod === 'pix' && qrCode && (
-                <div className="mb-6 text-center">
-                  <div className="bg-white border-2 border-gray-200 rounded-lg p-4 inline-block">
-                    <div className="text-xs text-gray-500 mb-2">Escanea este código QR</div>
-                    <div className="bg-gray-100 p-2 rounded">
-                      <div className="font-mono text-xs break-all max-w-xs">{qrCode}</div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
+              
               {/* Botón de pago */}
               <button
                 onClick={handlePaymentRedirect}
                 className="w-full bg-violet-600 text-white py-3 rounded-lg font-medium hover:bg-violet-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={!paymentUrl}
+                disabled={!paymentUrl && !loading}
               >
                 {paymentMethod === 'pix' ? 'Copiar código PIX' : 'Continuar al pago'}
               </button>
-
+              
               {/* Información de seguridad */}
               <div className="mt-4 text-center text-xs text-gray-500">
                 <p>Pago seguro procesado por Mercado Pago</p>
