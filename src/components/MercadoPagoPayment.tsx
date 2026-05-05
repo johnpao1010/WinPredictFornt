@@ -39,8 +39,22 @@ export const MercadoPagoPayment: React.FC<MercadoPagoPaymentProps> = ({
         }
       });
       
-      const data = await response.json();
-      console.log('Respuesta de Mercado Pago:', data);
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      
+      // Verificar si la respuesta es JSON válido
+      const responseText = await response.text();
+      console.log('Response raw:', responseText);
+      
+      let data;
+      try {
+        data = JSON.parse(responseText);
+        console.log('Respuesta de Mercado Pago (JSON):', data);
+      } catch (jsonError) {
+        console.error('Error parsing JSON:', jsonError);
+        console.error('Response text that failed to parse:', responseText);
+        throw new Error(`Respuesta no válida del servidor: ${response.status}`);
+      }
       
       // Extraer checkout_url y preference_id según la respuesta del backend
       const { checkout_url, preference_id } = data;
